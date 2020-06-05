@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "VKAlertController",
+        "repositoryURL": "https://github.com/sanctovali/VKAlertController.git",
+        "state": {
+          "branch": null,
+          "revision": "e38e658fa9699533c5caaeab9d579d111acb41e4",
+          "version": "1.0.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}
