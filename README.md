@@ -1,12 +1,14 @@
 # VKAlertController
 [![Language](https://img.shields.io/badge/Swift-5.0-orange)](https://developer.apple.com/swift/)
-[![license](https://img.shields.io/github/license/sanctovali/VKAlertController)](/LICENSE)
+[![Language](https://img.shields.io/badge/iOS-10%2B-brightgreen)](https://www.apple.com/ios/ios-13/)
+[![Pod version](https://img.shields.io/badge/pod-v1.0.0-blue)](https://cocoapods.org/pods/VKAlertController)
+[![License](https://img.shields.io/github/license/sanctovali/VKAlertController)](/LICENSE)
 
 VKAlertController is a simple but nice alternative to the Apple's UIAlertController. The alert has fully customazible appearance and similar to UIAlertController usage.
 
 ![Screenshot](https://github.com/sanctovali/VKAlertController/blob/assets/actionSheet.png)![Screenshot](https://github.com/sanctovali/VKAlertController/blob/assets/cancel.png)![Screenshot](https://github.com/sanctovali/VKAlertController/blob/assets/systemTeal.png)
 
-##Features
+## Features
 ----------------
 - [x] Header View
 - [x] Header Image (Optional)
@@ -51,7 +53,7 @@ $ pod install
 
 Inside your project import module with `import VKAlertController`.
 
-###Swift package manager
+### Swift package manager
 
 To add the package to your project go to the `File` menu and choose `Swift Packages` > `Add Package Dependency`. For the URL enter https://github.com/sanctovali/VKAlertController.git
 Then check `Version – Up to Next Major` is selected and click `Next` -> `Finish`.
