@@ -23,7 +23,7 @@ VKAlertController is a simple but nice alternative to the Apple's UIAlertControl
 - [x] Swift 5 support
 - [x] Swift Package Manager
 
-# Requirements
+## Requirements
 ----------------
 - iOS 10.0+
 - Xcode 11+
