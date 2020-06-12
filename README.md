@@ -16,6 +16,7 @@ VKAlertController is a simple but nice alternative to the Apple's UIAlertControl
 - [x] Description message
 - [x] Customizations: fonts, colors, dimensions & more
 - [x] 1, 2 buttons (horizontally) or 3+ buttons (vertically)
+- [x] TextFields Support
 - [x] Closure when a button is pressed
 - [x] Similar implementation to UIAlertController
 - [x] Cocoapods

@@ -39,18 +39,25 @@ public class VKAlertController: UIViewController {
 		view.translatesAutoresizingMaskIntoConstraints = false
 		return view
 	}()
+	private (set) var textFields: [UITextField]?
 	//The alert view width
 	var alertViewWidthAnchorConstraint = NSLayoutConstraint()
 	//The scroll view to embed actions if it count > 4
 	private var scrollView: UIScrollView?
 	//The background visual effect around the alert
 	private var visualEffectView: UIVisualEffectView?
+	//
+	private lazy var bodyStack: UIStackView = {
+		let stack = UIStackView()
+		stack.translatesAutoresizingMaskIntoConstraints = false
+		stack.axis = .vertical
+		stack.alignment = .fill
+		stack.distribution = .fill
+		stack.spacing = 4
+		return stack
+	}()
 	//The container for an actions
 	private lazy var actionStack = UIStackView()
-	//The constant for set the same horizontal insets for subviews of an aletView
-	private let horizontalInset: CGFloat = 16.0
-	//The constant for set the same vertical insets for subviews of an aletView
-	private let verticalInset: CGFloat = 8.0
 	//Is true when all actions was added. And it's the right time to add cancel action
 	private var cancelActionWasAdded: Bool = false
 	//An VKAlertAction can only have one cancel action
@@ -74,21 +81,32 @@ public class VKAlertController: UIViewController {
 		cancel: UIColor(red: 0/255, green: 122/255, blue: 255/255, alpha: 0.7),
 		destructive: UIColor(red: 255/255, green: 72/255, blue: 61/255, alpha: 1.0))
 	
+	//MARK: - Constants -
+	//The constant for set the same horizontal insets for subviews of an aletView
+	private let horizontalInset: CGFloat = 16.0
+	//The constant for set the same vertical insets for subviews of an aletView
+	private let verticalInset: CGFloat = 8.0
+	private let buttonHeight: CGFloat = 44.0
+	
 	//MARK: - Lifecycle -
 	
+	public override func viewDidLoad() {
+		super.viewDidLoad()
+		addSubscriptionForKeyboardNotifications()
+	}
 	public override func viewWillAppear(_ animated: Bool) {
 		super.viewWillAppear(animated)
 		iconImageViewAnchorConstraints()
 		titleLabelAnchorConstraints()
-		bodyLabelAnchorConstraints()
-		
+		alertBodyStackAnchorConstraints()
+
 		addCancelAction()
 		
 		embedToScroll()
 		
 		actionStack.subviews.forEach { (view) in
 			if let action = view as? VKAlertAction {
-				setupAlertAction(action)
+				setupAlertActionColors(action)
 			}
 		}
 	}
@@ -136,13 +154,13 @@ public class VKAlertController: UIViewController {
 		} else {
 			titleLabel.isHidden = true
 		}
-		
-		//
-		alertView.addSubview(messageLabel)
+
+		alertView.addSubview(bodyStack)
 		if let body = message {
 			messageLabel.text = body
+			bodyStack.addArrangedSubview(messageLabel)
 		} else {
-			messageLabel.isHidden = true
+			bodyStack.isHidden = true
 		}
 		
 		alertView.addSubview(actionStack)
@@ -208,10 +226,10 @@ public class VKAlertController: UIViewController {
 		titleLabel.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -horizontalInset).isActive = true
 	}
 	
-	private func bodyLabelAnchorConstraints() {
-		messageLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: verticalInset).isActive = true
-		messageLabel.leadingAnchor.constraint(equalTo: alertView.leadingAnchor, constant: horizontalInset).isActive = true
-		messageLabel.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -horizontalInset).isActive = true
+	private func alertBodyStackAnchorConstraints() {
+		bodyStack.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: verticalInset).isActive = true
+		bodyStack.leadingAnchor.constraint(equalTo: alertView.leadingAnchor, constant: horizontalInset).isActive = true
+		bodyStack.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -horizontalInset).isActive = true
 	}
 	
 	private func setupVisualEffect(style: UIBlurEffect.Style) {
@@ -240,13 +258,12 @@ public class VKAlertController: UIViewController {
 	}
 	
 	private func addCancelAction() {
-		cancelActionWasAdded = true
 		if let cancelAction = cancelAction {
 			addAction(cancelAction)
 		}
+		cancelActionWasAdded = true
 	}
 	
-	//
 	private func embedToScroll() {
 		
 		if scrollView != nil {
@@ -257,9 +274,9 @@ public class VKAlertController: UIViewController {
 		scrollView = UIScrollView(frame: .init(x: 0, y: 0, width: 0, height: 0))
 		scrollView?.translatesAutoresizingMaskIntoConstraints = false
 		alertView.addSubview(scrollView!)
-		scrollView?.topAnchor.constraint(equalTo: messageLabel.bottomAnchor, constant: 8).isActive = true
-		scrollView?.leadingAnchor.constraint(equalTo: messageLabel.leadingAnchor, constant: 0).isActive = true
-		scrollView?.trailingAnchor.constraint(equalTo: messageLabel.trailingAnchor, constant: 0).isActive = true
+		scrollView?.topAnchor.constraint(equalTo: bodyStack.bottomAnchor, constant: 8).isActive = true
+		scrollView?.leadingAnchor.constraint(equalTo: bodyStack.leadingAnchor, constant: 0).isActive = true
+		scrollView?.trailingAnchor.constraint(equalTo: bodyStack.trailingAnchor, constant: 0).isActive = true
 		scrollView?.addSubview(actionStack)
 		actionStack.translatesAutoresizingMaskIntoConstraints = false
 		scrollView?.isPagingEnabled = false
@@ -274,7 +291,6 @@ public class VKAlertController: UIViewController {
 	private func setScrollViewHeight() {
 		guard let scrollView = scrollView else { return }
 		
-		//The scroll view height
 		var scrollViewHeightAnchorConstraint = NSLayoutConstraint()
 		
 		let orientation = UIDevice.current.orientation
@@ -282,23 +298,35 @@ public class VKAlertController: UIViewController {
 		scrollView.isScrollEnabled = orientation.isLandscape ? true : false
 		
 		let count = actionStack.arrangedSubviews.count
-		let contentHeight = CGFloat(count * 44 + (count - 1) * 8)
-		scrollView.contentSize.height = contentHeight
-		//44 is the button height
-		//An alert view with .actionSheet style has always vertical axis for actions
-		let lanscapeHeight: CGFloat = actionStack.arrangedSubviews.count > 2 || prefferedStyle == .actionSheet ? 92 : 44
-		var portraiteHeight: CGFloat
-		switch count {
-		case 1...2:
-			portraiteHeight = prefferedStyle == .actionSheet ? 92 : 44
-		case 3...5:
-			portraiteHeight = contentHeight
-		default:
-			portraiteHeight = 236
-			scrollView.isScrollEnabled = true
-		}
-		scrollViewHeightAnchorConstraint = NSLayoutConstraint(item: scrollView, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: orientation.isLandscape ? lanscapeHeight : portraiteHeight)
+
+		scrollView.contentSize.height = calculateContentsHeight(for: count)
+		
+		let scrollHeight: CGFloat = calculateScrollHeight(subviewCount: count)
+		scrollViewHeightAnchorConstraint = NSLayoutConstraint(item: scrollView, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: scrollHeight)
 		NSLayoutConstraint.activate([scrollViewHeightAnchorConstraint])
+	}
+		
+	private func calculateScrollHeight(subviewCount: Int) -> CGFloat {
+		let contentHeight = calculateContentsHeight(for: subviewCount)
+		let orientation = UIDevice.current.orientation
+		if !orientation.isLandscape {
+			switch subviewCount {
+			case 1...2:
+				return prefferedStyle == .actionSheet ? contentHeight : buttonHeight
+			case 3...5:
+				return contentHeight
+			default:
+				return calculateContentsHeight(for: 5)
+			}
+		} else {
+			//An alert view with .actionSheet style has always vertical axis for actions stack
+			return actionStack.arrangedSubviews.count > 2 || prefferedStyle == .actionSheet ? contentHeight : buttonHeight
+		}
+	}
+	
+	private func calculateContentsHeight(for subviewsCount: Int) -> CGFloat {
+		let stackInset: CGFloat = verticalInset / 2
+		return CGFloat(subviewsCount) * buttonHeight + CGFloat(subviewsCount - 1) * verticalInset / stackInset
 	}
 	
 	//MARK: - Public Methods -
@@ -306,7 +334,7 @@ public class VKAlertController: UIViewController {
 	Animates the apperance of an alert
 	- Parameter duration: The total duration of the animations, measured in seconds. By default is 0.4 second
 	*/
-	public func animateIn(duration: TimeInterval = 0.4) {
+	fileprivate func animateIn(duration: TimeInterval = 0.4) {
 		if prefferedStyle == .alert {
 			alertView.transform = CGAffineTransform.init(scaleX: 1.3, y: 1.3)
 		} else {
@@ -321,7 +349,7 @@ public class VKAlertController: UIViewController {
 	Animates the disapperance of an alert
 	- Parameter duration: The total duration of the animations, measured in seconds. By default is 0.4 second
 	*/
-	public func animateOut(duration: TimeInterval = 0.4) {
+	fileprivate func animateOut(duration: TimeInterval = 0.4) {
 		UIView.animate(withDuration: duration,
 					   animations: {
 						if self.prefferedStyle == .alert {
@@ -334,7 +362,6 @@ public class VKAlertController: UIViewController {
 		}) { (_) in
 			self.alertView.removeFromSuperview()
 		}
-		dismiss(animated: true, completion: nil)
 	}
 	/**
 	Attaches an action to the alert
@@ -343,10 +370,7 @@ public class VKAlertController: UIViewController {
 	public func addAction(_ alertAction: VKAlertAction) {
 		//The action with style of .cancel will be added lately
 		if alertAction.actionStyle == .cancel && !cancelActionWasAdded {
-			if cancelAction != nil {
-				warnIfCancel()
-			}
-			cancelAction = alertAction
+			storeCancelAction(alertAction)
 			return
 		}
 		
@@ -357,7 +381,19 @@ public class VKAlertController: UIViewController {
 		default:
 			actionStack.addArrangedSubview(alertAction)
 		}
-		//sets action stack axis
+		setupActionsStack()
+		
+		alertAction.addTarget(self, action: #selector(dissmissAlert), for: .touchUpInside)
+	}
+	
+	private func storeCancelAction(_ action: VKAlertAction) {
+		if cancelAction != nil {
+			warnInSeveralCancelActions()
+		}
+		cancelAction = action
+	}
+	
+	private func setupActionsStack() {
 		//An alert view with .actionSheet style has always vertical axis for actions
 		switch actionStack.arrangedSubviews.count {
 		case let count where count > 2 || prefferedStyle == .actionSheet:
@@ -366,15 +402,32 @@ public class VKAlertController: UIViewController {
 		default:
 			actionStack.axis = .horizontal
 		}
-		
-		actionStack.spacing = 4.0
-		
-		alertAction.addTarget(self, action: #selector(dissmissAlert), for: .touchUpInside)
+		actionStack.spacing = verticalInset / 2
 	}
 	
-	private func setupAlertAction(_ action: VKAlertAction) {
+	public func addTextField(configurationHandler: ((_ textField: UITextField) -> Void)? ) {
+		let textField = UITextField()
+		textField.delegate = self
+		textField.returnKeyType = .done
+		textField.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+		textField.textAlignment = .left
+		textField.autocorrectionType = .no
+		textField.translatesAutoresizingMaskIntoConstraints = false
+		textField.heightAnchor.constraint(equalToConstant: 30).isActive = true
+		textField.borderStyle = .roundedRect
+		if configurationHandler != nil {
+			configurationHandler!(textField)
+		}
+		if textFields == nil {
+			textFields = []
+		}
+		textFields?.append(textField)
+		bodyStack.addArrangedSubview(textField)
+	}
+	
+	private func setupAlertActionColors(_ action: VKAlertAction) {
 		action.setTitleColor(tintColor, for: [])
-					
+		
 		//Applyes action color to action buttons
 		if let colors = actionsColor {
 			switch action.actionStyle {
@@ -395,12 +448,45 @@ public class VKAlertController: UIViewController {
 	//MARK: - obj-c methods -
 	@objc private func dissmissAlert() {
 		animateOut()
+		dismiss(animated: true)
 	}
 	
 	//MARK: - Helper -
-	private func warnIfCancel() {
+	private func warnInSeveralCancelActions() {
 		print("⚠️ WARNING: \(#function) VKAlertController can only have one action with a style of UIAlertAction.Style.cancel.\nPresented only the last added action of UIAlertAction.Style.cancel")
+	}
+
+	deinit {
+		removeSubscriptionForKeyboardNotifications()
 	}
 	
 }
+//MARK: - Keyboard handling -
+extension VKAlertController {
+	@objc func handleKeyboardNotification(_ notification: Notification) {
+		guard  let userInfo = notification.userInfo, let keyboardFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue  else { return  }
+
+		let offset = (view.frame.height / 2 + alertView.frame.height / 2) - keyboardFrame.origin.y
+
+		if notification.name == UIResponder.keyboardWillShowNotification {
+			view.frame.origin.y = -offset
+		} else if notification.name == UIResponder.keyboardWillHideNotification {
+			view.frame.origin.y = 0
+		}
+	}
+	
+	private func addSubscriptionForKeyboardNotifications() {
+		NotificationCenter.default.addObserver(self, selector: #selector(handleKeyboardNotification(_:)), name: UIResponder.keyboardWillShowNotification, object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(handleKeyboardNotification(_:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(handleKeyboardNotification(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+	}
+	
+	private func removeSubscriptionForKeyboardNotifications() {
+		NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
+		NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
+		NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
+	}
+}
+
+
 

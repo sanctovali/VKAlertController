@@ -16,7 +16,7 @@ Pod::Spec.new do |spec|
   #
 
   spec.name         = "VKAlertController"
-  spec.version      = "1.0.0"
+  spec.version      = "1.0.1"
   spec.summary      = "VKAlertController is a simple but nice alternative to the Apple's UIAlertController."
 
   # This description is used to generate tags and improve search results.
