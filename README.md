@@ -1,7 +1,7 @@
 # VKAlertController
 [![Language](https://img.shields.io/badge/Swift-5.0-orange)](https://developer.apple.com/swift/)
 [![Language](https://img.shields.io/badge/iOS-10%2B-brightgreen)](https://www.apple.com/ios/ios-13/)
-[![Pod version](https://img.shields.io/badge/pod-v1.0.0-blue)](https://cocoapods.org/pods/VKAlertController)
+[![Pod version](https://img.shields.io/cocoapods/v/VKAlertController)](https://cocoapods.org/pods/VKAlertController)
 [![License](https://img.shields.io/github/license/sanctovali/VKAlertController)](/LICENSE)
 
 VKAlertController is a simple but nice alternative to the Apple's UIAlertController. The alert has fully customazible appearance and similar to UIAlertController usage.
