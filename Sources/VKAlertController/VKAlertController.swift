@@ -39,7 +39,12 @@ public class VKAlertController: UIViewController {
 		view.translatesAutoresizingMaskIntoConstraints = false
 		return view
 	}()
-	private(set) var textFields: [UITextField]?
+	private var textFields: [UITextField]?
+	public var textField: [UITextField]? {
+		get {
+			return textFields
+		}
+	}
 	//The alert view width
 	var alertViewWidthAnchorConstraint = NSLayoutConstraint()
 	//The scroll view to embed actions if it count > 4
